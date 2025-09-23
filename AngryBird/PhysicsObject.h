@@ -13,14 +13,29 @@ private:
 	//The size of the object in meters
 	b2Vec2 Size;
 
+	float health = 100.0f;
+	bool invul = false;
+
+	bool markedForDestroy = false;
+	bool isEnemy = false;
+
+	class Game* gameClass = nullptr;
+
 public:
 	PhysicsObject(b2Shape::Type _shapeType, sf::Sprite* _sprite, b2Vec2 _size, b2Vec2 _position,
-		float _rotationDegrees, b2BodyType _bodyType, b2World* _world);
+		float _rotationDegrees, b2BodyType _bodyType, b2World* _world, Game* _gameClass);
 
 	~PhysicsObject();
 
 	b2Body* GetBody();
 
 	void Draw(sf::RenderWindow& _window);
+
+	void ReceiveImpact(float _approachSpeed);
+
+	void SetHealth(float _health, bool _invul = false);
+	void setIsEnemy(bool _isEnemy);
+
+	inline bool IsMarkedForDestroy() { return markedForDestroy; }
 };
 

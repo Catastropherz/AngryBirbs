@@ -3,6 +3,8 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PhysicsObject.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="MyContactList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Headers">
@@ -12,5 +14,7 @@
   <ItemGroup>
     <ClInclude Include="PhysicsObject.h" />
     <ClInclude Include="PhysicsLibrary.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="MyContactList.h" />
   </ItemGroup>
 </Project>

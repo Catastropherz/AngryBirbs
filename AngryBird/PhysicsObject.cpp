@@ -1,12 +1,15 @@
 #include "PhysicsObject.h"
 #include "PhysicsLibrary.h"
+#include "Game.h"
+#include <iostream>
 
 PhysicsObject::PhysicsObject(b2Shape::Type _shapeType, sf::Sprite* _sprite, b2Vec2 _size, b2Vec2 _position,
-	float _rotationDegrees, b2BodyType _bodyType, b2World* _world)
+	float _rotationDegrees, b2BodyType _bodyType, b2World* _world, Game* _gameClass)
 {
 	Size = _size;
 	Sprite = _sprite;
 	Box2dWorld = _world;
+	gameClass = _gameClass;
 
 	b2BodyDef bodyDef;
 	bodyDef.position = _position;
@@ -68,4 +71,35 @@ void PhysicsObject::Draw(sf::RenderWindow& _window)
 	Sprite->setRotation(RadiansToDegrees(Body->GetAngle()));
 
 	_window.draw(*Sprite);
+}
+
+void PhysicsObject::ReceiveImpact(float _approachSpeed)
+{
+	if (invul) return;
+	if (_approachSpeed < 1.0f) return;
+	
+	// TODO : Give everything 1s invulnerability after spawning
+
+	health -= pow(_approachSpeed, 2);
+	std::cout << "Health: " << health << std::endl;
+	if (health <= 0.0f)
+	{
+		markedForDestroy = true;
+
+		if (isEnemy)
+		{
+			//gameClass->EnemyDied();
+		}
+	}
+}
+
+void PhysicsObject::SetHealth(float _health, bool _invul)
+{
+	health = _health;
+	invul = _invul;
+}
+
+void PhysicsObject::setIsEnemy(bool _isEnemy)
+{
+	isEnemy = _isEnemy;
 }

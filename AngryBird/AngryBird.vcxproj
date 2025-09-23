@@ -155,10 +155,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MyContactList.cpp" />
     <ClCompile Include="PhysicsObject.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="MyContactList.h" />
     <ClInclude Include="PhysicsLibrary.h" />
     <ClInclude Include="PhysicsObject.h" />
   </ItemGroup>
