@@ -36,6 +36,8 @@ PhysicsObject::PhysicsObject(b2Shape::Type _shapeType, sf::Sprite* _sprite, b2Ve
 	fixtureDef.density = 1.0f;
 	fixtureDef.friction = 0.5f;
 	fixtureDef.restitution = 0.3f;
+	fixtureDef.filter.categoryBits = CATEGORY_DEFAULT;
+	//fixtureDef.filter.maskBits = CATEGORY_DEFAULT | CATEGORY_PHYSICSOBJECT;
 	Body->CreateFixture(&fixtureDef);
 }
 
@@ -102,4 +104,56 @@ void PhysicsObject::SetHealth(float _health, bool _invul)
 void PhysicsObject::setIsEnemy(bool _isEnemy)
 {
 	isEnemy = _isEnemy;
+}
+
+PhysicsObject* PhysicsObject::SetFilterGroup(int16 _filterGroup)
+{
+
+	//b2Filter FilterData;
+	//FilterData.categoryBits = CATEGORY_PLAYER;
+	//FilterData.maskBits = CATEGORY_ENEMY | CATEGORY_WALL;
+
+	//if (FilterData.maskBits && CATEGORY_ENEMY)
+	//{
+
+	//}
+
+	b2Filter FilterData;
+	FilterData.groupIndex = _filterGroup;
+
+	Body->GetFixtureList()->SetFilterData(FilterData);
+	
+	return this;
+}
+
+void PhysicsObject::SetCollisionCategory(const unsigned int _category)
+{
+	b2Filter FilterData = Body->GetFixtureList()->GetFilterData();
+	FilterData.categoryBits = _category;
+
+	Body->GetFixtureList()->SetFilterData(FilterData);
+}
+
+void PhysicsObject::AddCollisionMask(const unsigned int _mask)
+{
+	b2Filter FilterData = Body->GetFixtureList()->GetFilterData();
+
+	if (!CustomMaskBits)
+	{
+		FilterData.maskBits = 0;
+		CustomMaskBits = true;
+	}
+
+	FilterData.maskBits = FilterData.maskBits|_mask;
+
+	Body->GetFixtureList()->SetFilterData(FilterData);
+
+}
+
+void PhysicsObject::RemoveCollisionMask(unsigned int _mask)
+{
+	b2Filter FilterData = Body->GetFixtureList()->GetFilterData();
+	
+	FilterData.maskBits = FilterData.maskBits & (~_mask);
+	Body->GetFixtureList()->SetFilterData(FilterData);
 }

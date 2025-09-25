@@ -37,5 +37,14 @@ public:
 	void setIsEnemy(bool _isEnemy);
 
 	inline bool IsMarkedForDestroy() { return markedForDestroy; }
+
+	PhysicsObject* SetFilterGroup(int16 _filterGroup);
+
+	bool CustomMaskBits = false;
+
+	void SetCollisionCategory(const unsigned int _category);
+	void AddCollisionMask(const unsigned int _mask);
+
+	void RemoveCollisionMask(unsigned int _mask);
 };
 

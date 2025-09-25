@@ -14,6 +14,7 @@ private:
 	sf::Sprite groundSprite;
 	sf::Sprite pipeSprite;
 	sf::Sprite duckSprite;
+	sf::Sprite slingshotSprite;
 
 	b2World* Box2dWorld;
 	class MyContactList* Box2dContactListener = nullptr;
@@ -21,6 +22,10 @@ private:
 	std::vector<PhysicsObject*> PhysicsObjects;
 	std::vector<sf::Texture*> Textures;
 	PhysicsObject* groundObject = nullptr;
+	PhysicsObject* slingshotObject = nullptr;
+	PhysicsObject* projectileObject = nullptr;
+
+	b2DistanceJoint* slingshotJoint = nullptr;
 
 public:
 	Game();
@@ -32,6 +37,8 @@ public:
 	void Process();
 
 	PhysicsObject* CreatePipe(b2Vec2 _position, float _rotation);
+	PhysicsObject* CreateSlingshot(b2Vec2 _position, float _rotation);
+
 	std::vector<PhysicsObject*> GetPhysicsObjects();
 };
 
