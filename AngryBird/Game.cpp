@@ -1,13 +1,20 @@
 #include "Game.h"
 #include "MyContactList.h"
 
-Game::Game()
+Game::Game(int _width, int _height)
 {
     //Creates an SFML window at a desired resolution.
-    window = new sf::RenderWindow(sf::VideoMode(1280, 720), "SFML and Box2D");
+	windowWidth = _width;
+	windowHeight = _height;
+    window = new sf::RenderWindow(sf::VideoMode(windowWidth, windowHeight), "SFML and Box2D");
     window->setFramerateLimit(60);
 
     //Load textures and create sprites.
+	sf::Texture* backgroundTexture = new sf::Texture;
+	backgroundTexture->loadFromFile("Sprites/background.png");
+	backgroundSprite.setTexture(*backgroundTexture);
+	Textures.push_back(backgroundTexture); //Store texture so it doesn't go out of scope
+
     sf::Texture* chickTexture = new sf::Texture;
     chickTexture->loadFromFile("Sprites/chick.png");
     chickSprite.setTexture(*chickTexture);
@@ -35,6 +42,26 @@ Game::Game()
 
     //Create box2d world
     Box2dWorld = new b2World(g_gravity);
+
+	// Create background
+    backgroundSprite.setScale(
+        windowWidth / backgroundSprite.getTexture()->getSize().x,
+        windowHeight / backgroundSprite.getTexture()->getSize().y
+	);
+    backgroundSprite.setPosition(0.0f, 0.0f);
+    PhysicsObject* backgroundObject = new PhysicsObject(
+        b2Shape::e_polygon,         // Type (polygon = box, circle)
+        &backgroundSprite,          // Sprite
+        b2Vec2(25.6f, 14.4f),      // Size (in meters)
+        b2Vec2(12.8f, 7.2f),       // Position (in meters)
+        0.0f,                       // Rotation (in degrees)
+        b2_staticBody,             // Body type (static, kinematic, dynamic)
+        Box2dWorld,                 // Pointer to the box2d world
+        this						// Pointer to the game class
+	);
+	backgroundObject->SetCollisionCategory(CATEGORY_SPRITE);
+	PhysicsObjects.push_back(backgroundObject);
+
 
 	//Create contact listener
 	Box2dContactListener = new MyContactList(Box2dWorld, this);

@@ -21,7 +21,7 @@ private:
 
 	b2Vec2 spawnPosition;
 	bool isRespawn = false;
-	float respawnTimer = 5.0f; //seconds
+	float respawnTimer = 4.5f; //seconds
 	float respawnCountdown = 0.0f;
 
 	class Game* gameClass = nullptr;

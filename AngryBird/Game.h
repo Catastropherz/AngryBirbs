@@ -10,6 +10,10 @@ class Game
 {
 private:
 	sf::RenderWindow* window;
+	int windowWidth = 1280;
+	int windowHeight = 720;
+
+	sf::Sprite backgroundSprite;
 	sf::Sprite chickSprite;
 	sf::Sprite groundSprite;
 	sf::Sprite pipeSprite;
@@ -28,7 +32,7 @@ private:
 	b2DistanceJoint* slingshotJoint = nullptr;
 
 public:
-	Game();
+	Game(int _width = 1280, int _height = 720);
 	~Game();
 
 	void PlayGame();
