@@ -19,6 +19,11 @@ private:
 	bool markedForDestroy = false;
 	bool isEnemy = false;
 
+	b2Vec2 spawnPosition;
+	bool isRespawn = false;
+	float respawnTimer = 5.0f; //seconds
+	float respawnCountdown = 0.0f;
+
 	class Game* gameClass = nullptr;
 
 public:
@@ -46,5 +51,8 @@ public:
 	void AddCollisionMask(const unsigned int _mask);
 
 	void RemoveCollisionMask(unsigned int _mask);
+
+	void StarRespawnTimer();
+	bool UpdateRespawnTimer(float _deltaTime);
 };
 

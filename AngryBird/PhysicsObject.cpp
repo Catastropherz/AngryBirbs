@@ -17,6 +17,8 @@ PhysicsObject::PhysicsObject(b2Shape::Type _shapeType, sf::Sprite* _sprite, b2Ve
 	bodyDef.angle = DegreesToRadians(_rotationDegrees);
 	Body = Box2dWorld->CreateBody(&bodyDef);
 
+	spawnPosition = _position;
+
 	b2FixtureDef fixtureDef;
 	b2PolygonShape polyShape;
 	b2CircleShape circleShape;
@@ -156,4 +158,31 @@ void PhysicsObject::RemoveCollisionMask(unsigned int _mask)
 	
 	FilterData.maskBits = FilterData.maskBits & (~_mask);
 	Body->GetFixtureList()->SetFilterData(FilterData);
+}
+
+void PhysicsObject::StarRespawnTimer()
+{
+	isRespawn = true;
+	respawnCountdown = respawnTimer;
+}
+
+bool PhysicsObject::UpdateRespawnTimer(float _deltaTime)
+{
+	if (!isRespawn) return false;
+	respawnCountdown -= _deltaTime;
+
+	bool almostStill = (Body->GetLinearVelocity().x < 0.1f && Body->GetLinearVelocity().x > -0.1f) &&
+		(Body->GetLinearVelocity().y < 0.1f && Body->GetLinearVelocity().y > -0.1f) &&
+		(Body->GetAngularVelocity() < 0.1f && Body->GetAngularVelocity() > -0.1f);
+
+	if (respawnCountdown <= 0.0f || almostStill)
+	{
+		Body->SetTransform(spawnPosition, 0.0f);
+		Body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
+		Body->SetAngularVelocity(0.0f);
+		isRespawn = false;
+		return true;
+	}
+
+	return false;
 }

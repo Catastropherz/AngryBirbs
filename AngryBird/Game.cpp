@@ -40,7 +40,7 @@ Game::Game()
 	Box2dContactListener = new MyContactList(Box2dWorld, this);
 	Box2dWorld->SetContactListener(Box2dContactListener);
 
-    CreateSlingshot(b2Vec2(3.5f, 12.5f), 0.0f);
+    CreateSlingshot(b2Vec2(4.0f, 12.0f), 0.0f);
     if (slingshotObject)
     {
 		slingshotObject->SetCollisionCategory(CATEGORY_SPRITE);
@@ -51,7 +51,7 @@ Game::Game()
         b2Shape::e_polygon,         // Type (polygon = box, circle)
         &chickSprite,               // Sprite
         b2Vec2(0.6f, 0.6f),         // Size (in meters)
-        b2Vec2(5.0f, 2.0f),         // Position (in meters)
+        b2Vec2(3.0f, 12.0f),         // Position (in meters)
         40.0f,                      // Rotation (in degrees)
         b2_dynamicBody,             // Body type (static, kinematic, dynamic)
         Box2dWorld,                 // Pointer to the box2d world
@@ -162,7 +162,23 @@ void Game::Process()
 
     for (int i = 0; i < PhysicsObjects.size(); i++)
     {
-        // Maybe we could tick the object here?
+		// Tick down respawn timers and reset projectile location
+        if (PhysicsObjects[i] == projectileObject && PhysicsObjects[i]->UpdateRespawnTimer(g_timeStep))
+        {
+            // Setup Slingshot Joint
+            b2DistanceJointDef slingshotJointDef;
+            slingshotJointDef.bodyA = projectileObject->GetBody();
+            slingshotJointDef.bodyB = slingshotObject->GetBody();
+            slingshotJointDef.collideConnected = false;
+            slingshotJointDef.maxLength = 2.0f;
+            slingshotJointDef.minLength = 0.0f;
+            slingshotJointDef.stiffness = 100.0f;
+            slingshotJointDef.damping = 0.0f;
+            slingshotJointDef.length = 1.0f;
+            slingshotJointDef.localAnchorB = b2Vec2(0.0f, -0.9f);
+            slingshotJointDef.type = e_distanceJoint;
+            slingshotJoint = (b2DistanceJoint*)Box2dWorld->CreateJoint(&slingshotJointDef);
+        }
 
 		//Delete physics objects that are marked for destroy
         if (PhysicsObjects[i]->IsMarkedForDestroy())
@@ -234,13 +250,24 @@ void Game::Process()
             //Destroy the mouse joint
             if (MouseJoint)
             {
-                //destryoy mouse joint
+                b2Vec2 mousePos = MouseJoint->GetTarget();
+                //destroy mouse joint
                 Box2dWorld->DestroyJoint(MouseJoint);
                 MouseJoint = nullptr;
 
-				//Destroy slingshot joint so the projectile can fly
-                // TODO : Add a deadzone to prevent firing backwards
+				
+                //Add a deadzone to prevent firing backwards
+				bool deadzone = false;
                 if (slingshotJoint)
+                {
+					b2Vec2 slingshotPos = slingshotJoint->GetAnchorB();
+                    if (mousePos.x > slingshotPos.x - 0.5f)
+                    {
+						deadzone = true;
+                    }
+                }
+                //Destroy slingshot joint so the projectile can fly
+                if (slingshotJoint && !deadzone)
                 {
 					b2Vec2 slingshotPos = slingshotJoint->GetAnchorB();
 
@@ -256,7 +283,7 @@ void Game::Process()
                         float maxForce = 6.0f; // Tweak multiplier for more/less power
 						impulse *= (originalLength / 2.0f) * maxForce; 
                         projectileObject->GetBody()->ApplyLinearImpulse(impulse, projectileObject->GetBody()->GetTransform().p, true);
-
+						projectileObject->StarRespawnTimer();
                     }
 				}
             }
@@ -309,7 +336,7 @@ PhysicsObject* Game::CreateSlingshot(b2Vec2 _position, float _rotation)
     slingshotObject = new PhysicsObject(
         b2Shape::e_polygon,         // Type (polygon = box, circle)
         &slingshotSprite,                // Sprite
-        b2Vec2(2.0f, 2.0f),         // Size (in meters)
+        b2Vec2(2.5f, 3.0f),         // Size (in meters)
         _position,                  // Position (in meters)
         _rotation,                  // Rotation (in degrees)
         b2_staticBody,             // Body type (static, kinematic, dynamic)
