@@ -1,4 +1,7 @@
+Credits:
 https://craftpix.net/freebies/free-forest-battle-backgrounds/
+https://kenney.nl/assets/animal-pack-redux
+https://kenney.nl/assets/simplified-platformer-pack
 https://freesound.org/people/PRINCEofWORMS/sounds/571273/
 https://freesound.org/people/Hitrison/sounds/216675/
 https://pixabay.com/sound-effects/owl-144750/
