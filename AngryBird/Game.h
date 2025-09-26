@@ -23,16 +23,16 @@ private:
 	int windowHeight = 720;
 
 	sf::Font font;
-	sf::Text* controlText;
-	sf::Text* birdNormalText;
-	sf::Text* birdDropText;
-	sf::Text* birdBigText;
-	sf::Text* descriptionText;
+	sf::Text* controlText = nullptr;
+	sf::Text* birdNormalText = nullptr;
+	sf::Text* birdDropText = nullptr;
+	sf::Text* birdBigText = nullptr;
+	sf::Text* descriptionText = nullptr;
 
 	sf::RectangleShape retryButton;
-	sf::Text* retryButtonText;
+	sf::Text* retryButtonText = nullptr;
 	sf::RectangleShape nextButton;
-	sf::Text* nextButtonText;
+	sf::Text* nextButtonText = nullptr;
 
 	sf::Sprite backgroundSprite;
 	sf::Sprite pauseSprite;
@@ -48,6 +48,17 @@ private:
 	sf::Sprite slingshotSprite;
 	sf::Sprite boxSprite;
 	sf::Sprite fenceSprite;
+
+	sf::SoundBuffer birdShootBuffer;
+	sf::Sound* birdShootSound;
+	sf::SoundBuffer birdDropBuffer;
+	sf::Sound* birdDropSound;
+	sf::SoundBuffer birdBigBuffer;
+	sf::Sound* birdBigSound;
+	sf::SoundBuffer deadBuffer;
+	sf::Sound* deadSound;
+
+	sf::Music BGM;
 
 	b2World* Box2dWorld;
 	class MyContactList* Box2dContactListener = nullptr;

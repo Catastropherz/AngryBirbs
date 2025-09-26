@@ -20,6 +20,26 @@ Game::Game(int _width, int _height)
 	nextButton.setPosition(windowWidth / 2.0f, windowHeight / 2.0f);
 	nextButton.setOrigin(100.0f, 50.0f);
 
+    //Load sounds
+	if(birdShootBuffer.loadFromFile("Sounds/shoot.flac"))
+	birdShootSound = new sf::Sound(birdShootBuffer);
+	birdShootSound->setVolume(30.0f);
+	birdDropBuffer.loadFromFile("Sounds/dive.wav");
+	birdDropSound = new sf::Sound(birdDropBuffer);
+	birdDropSound->setVolume(80.0f);
+	birdBigBuffer.loadFromFile("Sounds/owl.wav");
+	birdBigSound = new sf::Sound(birdBigBuffer);
+	birdBigSound->setVolume(40.0f);
+	deadBuffer.loadFromFile("Sounds/Death.wav");
+	deadSound = new sf::Sound(deadBuffer);
+	deadSound->setVolume(40.0f);
+
+    //BGM
+    BGM.openFromFile("Sounds/battleThemeA.wav");
+    BGM.setVolume(2.0f);
+	BGM.setLoop(true);
+    BGM.play();
+
     //Load textures and create sprites.
 	sf::Texture* backgroundTexture = new sf::Texture;
 	backgroundTexture->loadFromFile("Sprites/background.png");
@@ -174,21 +194,29 @@ Game::~Game()
     Box2dWorld = nullptr;
     delete Box2dContactListener;
 	Box2dContactListener = nullptr;
+	delete window;
+    window = nullptr;
+    delete birdShootSound;
+    birdShootSound = nullptr;
+    delete birdDropSound;
+    birdDropSound = nullptr;
+    delete birdBigSound;
+    birdBigSound = nullptr;
+    delete controlText;
+    controlText = nullptr;
+    delete birdNormalText;
+    birdNormalText = nullptr;
+    delete birdDropText;
+    birdDropText = nullptr;
+    delete birdBigText;
+    birdBigText = nullptr;
+    delete descriptionText;
+	descriptionText = nullptr;
 }
 
 void Game::PlayGame()
 {
 	CreateLevel(level);
-    //Draw our physics objects.
-    for (auto obj : PhysicsObjects)
-    {
-        obj->Draw(*window);
-    }
-    //Finally, display the window.
-    window->display();
-	
-    // Press any button to start the game
-	std::cin.get();
 
     //This is the window process section for SFML.
     while (window->isOpen())
@@ -289,6 +317,7 @@ void Game::Process()
             if (PhysicsObjects[i]->GetIsEnemy())
             {
                 enemiesLeft--;
+				deadSound->play();
             }
 
             delete PhysicsObjects[i];
@@ -345,6 +374,18 @@ void Game::Process()
                 else // If the porojectile is already fired, clicking will activate its effect
                 {
 					projectileObject->ActivateBirdEffect(birdMode);
+					// Play sound
+                    switch (birdMode)
+                    {
+                        case BIRD_DROP:
+                        birdDropSound->play();
+						break;
+                        case BIRD_BIG:
+						birdBigSound->play();
+                        break;
+                        default:
+						break;
+                    }
                 }
             }
             else if (paused)
@@ -411,6 +452,9 @@ void Game::Process()
                         projectileObject->GetBody()->ApplyLinearImpulse(impulse, projectileObject->GetBody()->GetTransform().p, true);
 						projectileObject->StarRespawnTimer();
                     }
+
+					// Play sound
+					birdShootSound->play();
 				}
             }
         }
@@ -817,7 +861,7 @@ void Game::SwitchBird()
         break;
     case BIRD_DROP:
         projectileObject->SetSprite(&parrotSprite);
-        descriptionText->setString("Drop Bird: Left click while in the air to drop to the ground.");
+        descriptionText->setString("Dive Bird: Left click while in the air to dive to the ground.");
 		descriptionText->setFillColor(sf::Color::Red);
         break;
     case BIRD_BIG:
