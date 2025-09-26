@@ -10,11 +10,26 @@ Game::Game(int _width, int _height)
     window = new sf::RenderWindow(sf::VideoMode(windowWidth, windowHeight), "SFML and Box2D");
     window->setFramerateLimit(60);
 
+    //Create buttons
+	retryButton.setSize(sf::Vector2f(200.0f, 100.0f));
+	retryButton.setFillColor(sf::Color::Yellow);
+	retryButton.setPosition(windowWidth / 2.0f, windowHeight / 2.0f);
+	retryButton.setOrigin(100.0f, 50.0f);
+	nextButton.setSize(sf::Vector2f(200.0f, 100.0f));
+	nextButton.setFillColor(sf::Color::Green);
+	nextButton.setPosition(windowWidth / 2.0f, windowHeight / 2.0f);
+	nextButton.setOrigin(100.0f, 50.0f);
+
     //Load textures and create sprites.
 	sf::Texture* backgroundTexture = new sf::Texture;
 	backgroundTexture->loadFromFile("Sprites/background.png");
 	backgroundSprite.setTexture(*backgroundTexture);
 	Textures.push_back(backgroundTexture); //Store texture so it doesn't go out of scope
+
+	sf::Texture* pauseTexture = new sf::Texture;
+	pauseTexture->loadFromFile("Sprites/pause_screen.png");
+	pauseSprite.setTexture(*pauseTexture);
+	Textures.push_back(pauseTexture); //Store texture so it doesn't go out of scope
 
     sf::Texture* chickTexture = new sf::Texture;
     chickTexture->loadFromFile("Sprites/chick.png");
@@ -96,6 +111,16 @@ Game::Game(int _width, int _height)
 		descriptionText->setOutlineColor(sf::Color::Black);
 		descriptionText->setOutlineThickness(2.0f);
         descriptionText->setPosition(200.0f, 80.0f);
+
+		retryButtonText = new sf::Text("Retry", font, 20);
+		retryButtonText->setFillColor(sf::Color::Black);
+		retryButtonText->setPosition(windowWidth / 2.0f, windowHeight / 2.0f);
+		retryButtonText->setOrigin(retryButtonText->getLocalBounds().width / 2.0f, retryButtonText->getLocalBounds().height / 2.0f);
+
+		nextButtonText = new sf::Text("Next", font, 20);
+		nextButtonText->setFillColor(sf::Color::Black);
+		nextButtonText->setPosition(windowWidth / 2.0f, windowHeight / 2.0f );
+		nextButtonText->setOrigin(nextButtonText->getLocalBounds().width / 2.0f, nextButtonText->getLocalBounds().height / 2.0f);
     }
     else
     {
@@ -181,15 +206,13 @@ void Game::Process()
 	// Check win condition
     if (enemiesLeft <= 0)
     {
-		// TODO LEVEL COMPLETE and NEXT LEVEL
-
-		level++;
-		CreateLevel(level);
+        paused = true;
+		victory = true;
     }
     // Check lose condition
     if (birdNormalLeft + birdDropLeft + birdBigLeft <= 0)
     {
-		//TODO GAME OVER and RESTART
+		paused = true;
     }
 
     for (int i = 0; i < PhysicsObjects.size(); i++)
@@ -296,7 +319,7 @@ void Game::Process()
             //Check if a mouse location is inside a body after converting location to meters
             sf::Vector2i MousePos = sf::Mouse::getPosition(*window);
             b2Vec2 MousePoint(MousePos.x / g_sizeScale, MousePos.y / g_sizeScale);
-            if(projectileObject)
+            if(projectileObject && !paused)
             {
 				// If the projectile is not fired yet, allow clicking on it
                 if (projectileObject->GetIsRespawn() == false)
@@ -323,6 +346,29 @@ void Game::Process()
                 {
 					projectileObject->ActivateBirdEffect(birdMode);
                 }
+            }
+            else if (paused)
+            {
+                // Check if retry button is clicked
+                if (event.mouseButton.button == sf::Mouse::Left)
+                {
+                    sf::Vector2f mousePosF(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y));
+                    if (retryButton.getGlobalBounds().contains(mousePosF) && !victory)
+                    {
+                        // Reset level
+                        paused = false;
+                        victory = false;
+                        CreateLevel(level);
+                    }
+                    else if (nextButton.getGlobalBounds().contains(mousePosF) && victory)
+                    {
+                        // Next level
+                        paused = false;
+                        victory = false;
+                        level++;
+                        CreateLevel(level);
+                    }
+				}
             }
         }
         else if (event.type == sf::Event::MouseButtonReleased)
@@ -404,6 +450,22 @@ void Game::Process()
 	window->draw(chickSpriteUI);
 	window->draw(parrotSpriteUI);
 	window->draw(owlSpriteUI);
+
+    // Pause screen
+    if (paused)
+    {
+        window->draw(pauseSprite);
+        if (!victory)
+        {
+            window->draw(retryButton);
+            window->draw(*retryButtonText);
+        }
+        else
+        {
+            window->draw(nextButton);
+			window->draw(*nextButtonText);
+        }
+    }
 
 
     //Finally, display the window.
@@ -571,7 +633,7 @@ void Game::CreateLevel(int _level)
     groundObject = new PhysicsObject(
         b2Shape::e_polygon,         // Type (polygon = box, circle)
         &groundSprite,               // Sprite
-        b2Vec2(26.0f, 1.0f),         // Size (in meters)
+        b2Vec2(100.0f, 1.0f),         // Size (in meters)
         b2Vec2(13.0f, 14.0f),         // Position (in meters)
         0.0f,                      // Rotation (in degrees)
         b2_staticBody,             // Body type (static, kinematic, dynamic)
@@ -618,9 +680,9 @@ void Game::CreateLevel(int _level)
             PhysicsObject* Box3 = CreateBox(b2Vec2(13.0f, 13.0f), 0.0f);
             PhysicsObject* Box4 = CreateBox(b2Vec2(12.0f, 13.0f), 0.0f);
             PhysicsObject* Box5 = CreateBox(b2Vec2(11.0f, 13.0f), 0.0f);
-            PhysicsObject* Box6 = CreateBox(b2Vec2(15.95f, 8.5f), 0.0f);
-            PhysicsObject* Box7 = CreateBox(b2Vec2(18.05f, 8.5f), 0.0f);
-            PhysicsObject* Box8 = CreateBox(b2Vec2(17.05f, 8.5f), 0.0f);
+            PhysicsObject* Box6 = CreateBox(b2Vec2(16.0f, 8.5f), 0.0f);
+            PhysicsObject* Box7 = CreateBox(b2Vec2(18.00f, 8.5f), 0.0f);
+            PhysicsObject* Box8 = CreateBox(b2Vec2(17.00f, 8.5f), 0.0f);
             //PhysicsObject* Box9 = CreateBox(b2Vec2(16.95f, 7.5f), 0.0f);
             PhysicsObject* Box10 = CreateBox(b2Vec2(15.0f, 13.0f), 0.0f);
             PhysicsObject* Box11 = CreateBox(b2Vec2(17.0f, 13.0f), 0.0f);
@@ -630,7 +692,7 @@ void Game::CreateLevel(int _level)
 			//Enemies
 			PhysicsObject* Duck1 = CreateEnemy(b2Vec2(13.0f, 12.0f), 0.0f);
             PhysicsObject* Duck2 = CreateEnemy(b2Vec2(14.0f, 11.0f), 0.0f);
-            PhysicsObject* Duck3 = CreateEnemy(b2Vec2(16.95f, 7.5f), 0.0f);
+            PhysicsObject* Duck3 = CreateEnemy(b2Vec2(16.99465f, 7.5f), 0.0f);
             PhysicsObject* Duck4 = CreateEnemy(b2Vec2(16.0f, 13.0f), 0.0f);
             PhysicsObject* Duck5 = CreateEnemy(b2Vec2(18.0f, 13.0f), 0.0f);
 

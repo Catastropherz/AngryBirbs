@@ -29,7 +29,13 @@ private:
 	sf::Text* birdBigText;
 	sf::Text* descriptionText;
 
+	sf::RectangleShape retryButton;
+	sf::Text* retryButtonText;
+	sf::RectangleShape nextButton;
+	sf::Text* nextButtonText;
+
 	sf::Sprite backgroundSprite;
+	sf::Sprite pauseSprite;
 	sf::Sprite chickSprite;
 	sf::Sprite chickSpriteUI;
 	sf::Sprite parrotSprite;
@@ -54,6 +60,9 @@ private:
 	PhysicsObject* backgroundObject = nullptr;
 
 	b2DistanceJoint* slingshotJoint = nullptr;
+
+	bool paused = false;
+	bool victory = false;
 
 	int birdMode = BIRD_NORMAL;
 	int score = 0;
