@@ -1,10 +1,18 @@
 #pragma once
 #include "SFML/Graphics.hpp"
+#include <SFML/Audio.hpp>
 #include "box2d\box2D.h"
 #include <vector>
 #include "PhysicsObject.h"
 #include <iostream>
 #include "PhysicsLibrary.h"
+
+enum BirdType
+{
+	BIRD_NORMAL = 1,
+	BIRD_DROP = 2,
+	BIRD_BIG = 3,
+};
 
 class Game
 {
@@ -13,8 +21,20 @@ private:
 	int windowWidth = 1280;
 	int windowHeight = 720;
 
+	sf::Font font;
+	sf::Text* controlText;
+	sf::Text* birdNormalText;
+	sf::Text* birdDropText;
+	sf::Text* birdBigText;
+	sf::Text* descriptionText;
+
 	sf::Sprite backgroundSprite;
 	sf::Sprite chickSprite;
+	sf::Sprite chickSpriteUI;
+	sf::Sprite parrotSprite;
+	sf::Sprite parrotSpriteUI;
+	sf::Sprite owlSprite;
+	sf::Sprite owlSpriteUI;
 	sf::Sprite groundSprite;
 	sf::Sprite pipeSprite;
 	sf::Sprite duckSprite;
@@ -30,12 +50,19 @@ private:
 	PhysicsObject* groundObject = nullptr;
 	PhysicsObject* slingshotObject = nullptr;
 	PhysicsObject* projectileObject = nullptr;
+	PhysicsObject* backgroundObject = nullptr;
 
 	b2DistanceJoint* slingshotJoint = nullptr;
 
+	int birdMode = BIRD_NORMAL;
 	int score = 0;
-	int birdsLeft = 5;
-	int enemiesLeft = 3;
+	int birdNormalAmmo = 15;
+	int birdNormalLeft = birdNormalAmmo;
+	int birdDropAmmo = 2;
+	int birdDropLeft = birdDropAmmo;
+	int birdBigAmmo = 1;
+	int birdBigLeft = birdBigAmmo;
+	int enemiesLeft = 5;
 	int level = 1;
 
 public:
@@ -52,6 +79,7 @@ public:
 	PhysicsObject* CreateBox(b2Vec2 _position, float _rotation);
 	PhysicsObject* CreateEnemy(b2Vec2 _position, float _rotation);
 	void CreateLevel(int _level);
+	void SwitchBird();
 
 	std::vector<PhysicsObject*> GetPhysicsObjects();
 };

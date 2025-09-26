@@ -39,10 +39,13 @@ public:
 
 	void ReceiveImpact(float _approachSpeed);
 
+	void SetSprite(sf::Sprite* _sprite);
+
 	void SetHealth(float _health, bool _invul = false);
 	void setIsEnemy(bool _isEnemy);
 
 	inline bool IsMarkedForDestroy() { return markedForDestroy; }
+	inline bool GetIsEnemy() { return isEnemy; }
 
 	PhysicsObject* SetFilterGroup(int16 _filterGroup);
 

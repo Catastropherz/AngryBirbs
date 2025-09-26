@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "MyContactList.h"
+#include <string>
 
 Game::Game(int _width, int _height)
 {
@@ -18,7 +19,20 @@ Game::Game(int _width, int _height)
     sf::Texture* chickTexture = new sf::Texture;
     chickTexture->loadFromFile("Sprites/chick.png");
     chickSprite.setTexture(*chickTexture);
+    chickSpriteUI.setTexture(*chickTexture);
 	Textures.push_back(chickTexture); //Store texture so it doesn't go out of scope
+
+    sf::Texture* parrotTexture = new sf::Texture;
+    parrotTexture->loadFromFile("Sprites/parrot.png");
+    parrotSprite.setTexture(*parrotTexture);
+    parrotSpriteUI.setTexture(*parrotTexture);
+    Textures.push_back(parrotTexture); //Store texture so it doesn't go out of scope
+
+    sf::Texture* owlTexture = new sf::Texture;
+    owlTexture->loadFromFile("Sprites/owl.png");
+    owlSprite.setTexture(*owlTexture);
+    owlSpriteUI.setTexture(*owlTexture);
+    Textures.push_back(owlTexture); //Store texture so it doesn't go out of scope
 
     sf::Texture* duckTexture = new sf::Texture;
     duckTexture->loadFromFile("Sprites/duck.png");
@@ -50,16 +64,52 @@ Game::Game(int _width, int _height)
     slingshotSprite.setTexture(*slingshotTexture);
     Textures.push_back(slingshotTexture); //Store texture so it doesn't go out of scope
 
+    // Setup font and text
+    if (font.loadFromFile("Fonts/MinecraftStandard.otf"))
+    {
+        controlText = new sf::Text("Spacebar - switch bird type", font, 20);
+        controlText->setFillColor(sf::Color::White);
+		controlText->setOutlineColor(sf::Color::Black);
+		controlText->setOutlineThickness(2.0f);
+		controlText->setPosition(200.0f, 30.0f);
+
+		birdNormalText = new sf::Text(std::string(" x " + std::to_string(birdNormalLeft)), font, 20);
+		birdNormalText->setFillColor(sf::Color::White);
+		birdNormalText->setOutlineColor(sf::Color::Black);
+		birdNormalText->setOutlineThickness(2.0f);
+		birdNormalText->setPosition(100.0f, 30.0f);
+
+        birdDropText = new sf::Text(std::string(" x " + std::to_string(birdDropLeft)), font, 20);
+        birdDropText->setFillColor(sf::Color::White);
+        birdDropText->setOutlineColor(sf::Color::Black);
+        birdDropText->setOutlineThickness(2.0f);
+        birdDropText->setPosition(100.0f, 80.0f);
+    
+        birdBigText = new sf::Text(std::string(" x " + std::to_string(birdBigLeft)), font, 20);
+        birdBigText->setFillColor(sf::Color::White);
+        birdBigText->setOutlineColor(sf::Color::Black);
+        birdBigText->setOutlineThickness(2.0f);
+        birdBigText->setPosition(100.0f, 130.0f);
+    }
+
+    // Setup UI
+	chickSpriteUI.setScale(0.25f, 0.25f);
+	chickSpriteUI.setPosition(50.0f, 20.0f);
+	parrotSpriteUI.setScale(0.25f, 0.25f);
+	parrotSpriteUI.setPosition(50.0f, 70.0f);
+	owlSpriteUI.setScale(0.25f, 0.25f);
+	owlSpriteUI.setPosition(50.0f, 120.0f);
+
     //Create box2d world
     Box2dWorld = new b2World(g_gravity);
 
-	// Create background
+    // Create background
     backgroundSprite.setScale(
         windowWidth / backgroundSprite.getTexture()->getSize().x,
         windowHeight / backgroundSprite.getTexture()->getSize().y
-	);
+    );
     backgroundSprite.setPosition(0.0f, 0.0f);
-    PhysicsObject* backgroundObject = new PhysicsObject(
+    backgroundObject = new PhysicsObject(
         b2Shape::e_polygon,         // Type (polygon = box, circle)
         &backgroundSprite,          // Sprite
         b2Vec2(25.6f, 14.4f),      // Size (in meters)
@@ -68,82 +118,8 @@ Game::Game(int _width, int _height)
         b2_staticBody,             // Body type (static, kinematic, dynamic)
         Box2dWorld,                 // Pointer to the box2d world
         this						// Pointer to the game class
-	);
-	backgroundObject->SetCollisionCategory(CATEGORY_SPRITE);
-	PhysicsObjects.push_back(backgroundObject);
-
-
-	//Create contact listener
-	Box2dContactListener = new MyContactList(Box2dWorld, this);
-	Box2dWorld->SetContactListener(Box2dContactListener);
-
-    //Create slingshot object
-    CreateSlingshot(b2Vec2(4.0f, 12.0f), 0.0f);
-    if (slingshotObject)
-    {
-		slingshotObject->SetCollisionCategory(CATEGORY_SPRITE);
-    }
-
-	//Create fence object (static)
-	PhysicsObject* fenceObject = new PhysicsObject(
-        b2Shape::e_polygon,         // Type (polygon = box, circle)
-        &fenceSprite,          // Sprite
-        b2Vec2(1.0f, 1.0f),      // Size (in meters)
-        b2Vec2(5.0f, 13.0f),       // Position (in meters)
-        0.0f,                       // Rotation (in degrees)
-        b2_staticBody,             // Body type (static, kinematic, dynamic)
-        Box2dWorld,                 // Pointer to the box2d world
-        this						// Pointer to the game class
     );
-    fenceObject->SetHealth(100.0f, true); //Set invul
-	PhysicsObjects.push_back(fenceObject);
-
-    //Create the chick object (box)
-    PhysicsObject* chickObject = new PhysicsObject(
-        b2Shape::e_polygon,         // Type (polygon = box, circle)
-        &chickSprite,               // Sprite
-        b2Vec2(0.6f, 0.6f),         // Size (in meters)
-        b2Vec2(3.0f, 12.0f),         // Position (in meters)
-        40.0f,                      // Rotation (in degrees)
-        b2_dynamicBody,             // Body type (static, kinematic, dynamic)
-        Box2dWorld,                 // Pointer to the box2d world
-		this						// Pointer to the game class
-    );
-	chickObject->SetHealth(100.0f, true); //Set invul
-	chickObject->SetCollisionCategory(CATEGORY_BIRD);
-	chickObject->AddCollisionMask(CATEGORY_PHYSICSOBJECT | CATEGORY_DEFAULT);
-    PhysicsObjects.push_back(chickObject);
-	projectileObject = chickObject; //Set as projectile
-
-    //Create the ground object (static)
-    groundObject = new PhysicsObject(
-        b2Shape::e_polygon,         // Type (polygon = box, circle)
-        &groundSprite,               // Sprite
-        b2Vec2(26.0f, 1.0f),         // Size (in meters)
-        b2Vec2(13.0f, 14.0f),         // Position (in meters)
-        0.0f,                      // Rotation (in degrees)
-        b2_staticBody,             // Body type (static, kinematic, dynamic)
-        Box2dWorld,                  // Pointer to the box2d world
-		this						// Pointer to the game class
-    );
-	groundObject->SetHealth(1000.0f, true); //Make ground invulnerable
-    PhysicsObjects.push_back(groundObject);
-
-	// Setup Slingshot Joint
-	b2DistanceJointDef slingshotJointDef;
-	slingshotJointDef.bodyA = chickObject->GetBody();
-	slingshotJointDef.bodyB = slingshotObject->GetBody();
-    slingshotJointDef.collideConnected = false;
-	slingshotJointDef.maxLength = 2.0f;
-	slingshotJointDef.minLength = 0.0f;
-	slingshotJointDef.stiffness = 100.0f;
-	slingshotJointDef.damping = 0.0f;
-    slingshotJointDef.length = 1.0f;
-	slingshotJointDef.localAnchorB = b2Vec2(0.0f, -0.9f);
-	slingshotJointDef.type = e_distanceJoint;
-	slingshotJoint = (b2DistanceJoint*)Box2dWorld->CreateJoint(&slingshotJointDef);
-
-
+    backgroundObject->SetCollisionCategory(CATEGORY_SPRITE);
 }
 
 Game::~Game()
@@ -192,6 +168,20 @@ void Game::Process()
     //Step the world physics forward
     Box2dWorld->Step(g_timeStep, 8, 3);
 
+	// Check win condition
+    if (enemiesLeft <= 0)
+    {
+		// TODO LEVEL COMPLETE and NEXT LEVEL
+
+		level++;
+		CreateLevel(level);
+    }
+    // Check lose condition
+    if (birdNormalLeft + birdDropLeft + birdBigLeft <= 0)
+    {
+		//TODO GAME OVER and RESTART
+    }
+
     for (int i = 0; i < PhysicsObjects.size(); i++)
     {
 		// Tick down respawn timers and reset projectile location
@@ -210,6 +200,48 @@ void Game::Process()
             slingshotJointDef.localAnchorB = b2Vec2(0.0f, -0.9f);
             slingshotJointDef.type = e_distanceJoint;
             slingshotJoint = (b2DistanceJoint*)Box2dWorld->CreateJoint(&slingshotJointDef);
+
+            // Reduce bird count
+            if (birdNormalLeft + birdDropLeft + birdBigLeft > 0)
+            {
+                switch (birdMode)
+                {
+                case BIRD_NORMAL:
+                    if (birdNormalLeft > 1) birdNormalLeft--;
+                    else if (birdNormalLeft == 1)
+                    {
+                        birdNormalLeft--;
+                        SwitchBird();
+                    }
+                    else SwitchBird();
+                    break;
+                case BIRD_DROP:
+                    if (birdDropLeft > 1) birdDropLeft--;
+                    else if (birdDropLeft == 1)
+                    {
+                        birdDropLeft--;
+                        SwitchBird();
+                    }
+                    else SwitchBird();
+                    break;
+                case BIRD_BIG:
+                    if (birdBigLeft > 1) birdBigLeft--;
+                    else if (birdBigLeft == 1)
+                    {
+                        birdBigLeft--;
+                        SwitchBird();
+                    }
+                    else SwitchBird();
+                    break;
+                default:
+                    break;
+                }
+
+				// Update UI
+				birdNormalText->setString(std::string(" x " + std::to_string(birdNormalLeft)));
+				birdDropText->setString(std::string(" x " + std::to_string(birdDropLeft)));
+				birdBigText->setString(std::string(" x " + std::to_string(birdBigLeft)));
+            }
         }
 
 		//Delete physics objects that are marked for destroy
@@ -221,18 +253,25 @@ void Game::Process()
                 MouseJoint = nullptr;
 			}
 
+            if (PhysicsObjects[i]->GetIsEnemy())
+            {
+                enemiesLeft--;
+            }
 
             delete PhysicsObjects[i];
 			PhysicsObjects.erase(PhysicsObjects.begin() + i);
             // when removing an item from a vector,
             // the next item will shift into the current index, 
             // so we need to decrement i to avoid skipping it
-            i--;  
+            i--;
         }
     }
 
     //Clear the previous window. If we don't do this, we will draw on top of previous stuff.
     window->clear();
+
+    // Draw the background
+	backgroundObject->Draw(*window);
 
     //Window events:
     sf::Event event;
@@ -320,6 +359,14 @@ void Game::Process()
 				}
             }
         }
+        else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
+        {
+			// Switch bird type
+            if (projectileObject && slingshotJoint)
+            {
+                SwitchBird();
+            }
+        }
     }
 
 
@@ -331,11 +378,23 @@ void Game::Process()
         MouseJoint->SetTarget(MousePoint);
     }
 
+
+
     //Draw our physics objects.
     for (auto obj : PhysicsObjects)
     {
         obj->Draw(*window);
     }
+
+    // Draw UI
+	window->draw(*controlText);
+	window->draw(*birdNormalText);
+	window->draw(*birdDropText);
+	window->draw(*birdBigText);
+	//window->draw(*descriptionText);
+	window->draw(chickSpriteUI);
+	window->draw(parrotSpriteUI);
+	window->draw(owlSpriteUI);
 
 
     //Finally, display the window.
@@ -417,7 +476,7 @@ PhysicsObject* Game::CreateEnemy(b2Vec2 _position, float _rotation)
         Box2dWorld,                 // Pointer to the box2d world
         this						// Pointer to the game class
     );
-    duckObject->SetHealth(60.0f); //Set health
+    duckObject->SetHealth(50.0f); //Set health
     duckObject->setIsEnemy(true); //Set as enemy
     duckObject->SetCollisionCategory(CATEGORY_PHYSICSOBJECT);
     duckObject->AddCollisionMask(CATEGORY_PHYSICSOBJECT | CATEGORY_DEFAULT | CATEGORY_BIRD);
@@ -428,6 +487,105 @@ PhysicsObject* Game::CreateEnemy(b2Vec2 _position, float _rotation)
 
 void Game::CreateLevel(int _level)
 {
+	//Clear everything and start fresh
+    if (MouseJoint)
+    {
+        Box2dWorld->DestroyJoint(MouseJoint);
+        MouseJoint = nullptr;
+    }
+    if (slingshotJoint)
+    {
+        Box2dWorld->DestroyJoint(slingshotJoint);
+        slingshotJoint = nullptr;
+    }
+    projectileObject = nullptr;
+    
+    for (auto obj : PhysicsObjects)
+    {
+        delete obj;
+	}
+	PhysicsObjects.clear();
+	// Reset variables
+    birdMode = BIRD_NORMAL;
+    birdNormalLeft = birdNormalAmmo;
+    birdDropLeft = birdDropAmmo;
+    birdBigLeft = birdBigAmmo;
+    enemiesLeft = 5;
+	// Update UI
+    birdNormalText->setString(std::string(" x " + std::to_string(birdNormalLeft)));
+    birdDropText->setString(std::string(" x " + std::to_string(birdDropLeft)));
+    birdBigText->setString(std::string(" x " + std::to_string(birdBigLeft)));
+
+    //Create contact listener
+    Box2dContactListener = new MyContactList(Box2dWorld, this);
+    Box2dWorld->SetContactListener(Box2dContactListener);
+
+    //Create slingshot object
+    CreateSlingshot(b2Vec2(4.0f, 12.0f), 0.0f);
+    if (slingshotObject)
+    {
+        slingshotObject->SetCollisionCategory(CATEGORY_SPRITE);
+    }
+
+    //Create fence object (static)
+    PhysicsObject* fenceObject = new PhysicsObject(
+        b2Shape::e_polygon,         // Type (polygon = box, circle)
+        &fenceSprite,          // Sprite
+        b2Vec2(1.0f, 1.0f),      // Size (in meters)
+        b2Vec2(5.0f, 13.0f),       // Position (in meters)
+        0.0f,                       // Rotation (in degrees)
+        b2_staticBody,             // Body type (static, kinematic, dynamic)
+        Box2dWorld,                 // Pointer to the box2d world
+        this						// Pointer to the game class
+    );
+    fenceObject->SetHealth(100.0f, true); //Set invul
+    PhysicsObjects.push_back(fenceObject);
+
+    //Create the chick object (box)
+    PhysicsObject* chickObject = new PhysicsObject(
+        b2Shape::e_polygon,         // Type (polygon = box, circle)
+        &chickSprite,               // Sprite
+        b2Vec2(0.6f, 0.6f),         // Size (in meters)
+        b2Vec2(3.0f, 12.0f),         // Position (in meters)
+        40.0f,                      // Rotation (in degrees)
+        b2_dynamicBody,             // Body type (static, kinematic, dynamic)
+        Box2dWorld,                 // Pointer to the box2d world
+        this						// Pointer to the game class
+    );
+    chickObject->SetHealth(100.0f, true); //Set invul
+    chickObject->SetCollisionCategory(CATEGORY_BIRD);
+    chickObject->AddCollisionMask(CATEGORY_PHYSICSOBJECT | CATEGORY_DEFAULT);
+    PhysicsObjects.push_back(chickObject);
+    projectileObject = chickObject; //Set as projectile
+
+    //Create the ground object (static)
+    groundObject = new PhysicsObject(
+        b2Shape::e_polygon,         // Type (polygon = box, circle)
+        &groundSprite,               // Sprite
+        b2Vec2(26.0f, 1.0f),         // Size (in meters)
+        b2Vec2(13.0f, 14.0f),         // Position (in meters)
+        0.0f,                      // Rotation (in degrees)
+        b2_staticBody,             // Body type (static, kinematic, dynamic)
+        Box2dWorld,                  // Pointer to the box2d world
+        this						// Pointer to the game class
+    );
+    groundObject->SetHealth(1000.0f, true); //Make ground invulnerable
+    PhysicsObjects.push_back(groundObject);
+
+    // Setup Slingshot Joint
+    b2DistanceJointDef slingshotJointDef;
+    slingshotJointDef.bodyA = chickObject->GetBody();
+    slingshotJointDef.bodyB = slingshotObject->GetBody();
+    slingshotJointDef.collideConnected = false;
+    slingshotJointDef.maxLength = 2.0f;
+    slingshotJointDef.minLength = 0.0f;
+    slingshotJointDef.stiffness = 100.0f;
+    slingshotJointDef.damping = 0.0f;
+    slingshotJointDef.length = 1.0f;
+    slingshotJointDef.localAnchorB = b2Vec2(0.0f, -0.9f);
+    slingshotJointDef.type = e_distanceJoint;
+    slingshotJoint = (b2DistanceJoint*)Box2dWorld->CreateJoint(&slingshotJointDef);
+
     switch (_level)
     {
         case 1:
@@ -489,6 +647,54 @@ void Game::CreateLevel(int _level)
         }
         default:
 			break;
+    }
+}
+
+void Game::SwitchBird()
+{
+    birdMode++;
+    if (birdMode > BIRD_BIG) birdMode = BIRD_NORMAL;
+
+	// Check if we have birds of that type left
+    switch (birdMode)
+    {
+        case BIRD_NORMAL:
+        if (birdNormalLeft <= 0)
+        {
+            birdMode++;
+            if (birdMode > BIRD_BIG) birdMode = BIRD_NORMAL;
+        }
+		break;
+        case BIRD_DROP:
+        if (birdDropLeft <= 0)
+        {
+            birdMode++;
+            if (birdMode > BIRD_BIG) birdMode = BIRD_NORMAL;
+		}
+        break;
+        case BIRD_BIG:
+        if (birdBigLeft <= 0)
+        {
+            birdMode++;
+            if (birdMode > BIRD_BIG) birdMode = BIRD_NORMAL;
+        }
+        break;
+    }
+
+    switch (birdMode)
+    {
+    case BIRD_NORMAL:
+        projectileObject->SetSprite(&chickSprite);
+        break;
+    case BIRD_DROP:
+        projectileObject->SetSprite(&parrotSprite);
+        break;
+    case BIRD_BIG:
+        projectileObject->SetSprite(&owlSprite);
+        break;
+    default:
+        projectileObject->SetSprite(&chickSprite);
+        break;
     }
 }
 

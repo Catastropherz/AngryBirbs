@@ -84,7 +84,6 @@ void PhysicsObject::ReceiveImpact(float _approachSpeed)
 	if (gracePeriod > 0.0f) return;
 
 	health -= pow(_approachSpeed, 2);
-	std::cout << "Health: " << health << std::endl;
 	if (health <= 0.0f)
 	{
 		markedForDestroy = true;
@@ -94,6 +93,11 @@ void PhysicsObject::ReceiveImpact(float _approachSpeed)
 			//gameClass->EnemyDied();
 		}
 	}
+}
+
+void PhysicsObject::SetSprite(sf::Sprite* _sprite)
+{
+	Sprite = _sprite;
 }
 
 void PhysicsObject::SetHealth(float _health, bool _invul)
