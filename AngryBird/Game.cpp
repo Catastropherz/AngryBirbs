@@ -141,6 +141,15 @@ Game::Game(int _width, int _height)
 		nextButtonText->setFillColor(sf::Color::Black);
 		nextButtonText->setPosition(windowWidth / 2.0f, windowHeight / 2.0f );
 		nextButtonText->setOrigin(nextButtonText->getLocalBounds().width / 2.0f, nextButtonText->getLocalBounds().height / 2.0f);
+    
+		endingText = new sf::Text("                 You Win!\nClick Next button to retry\nfrom the first level", font, 20);
+		endingText->setFillColor(sf::Color::Yellow);
+		endingText->setOutlineColor(sf::Color::Black);
+		endingText->setOutlineThickness(2.0f);
+		endingText->setPosition(windowWidth / 2.0f, windowHeight / 4.0f);
+		endingText->setOrigin(endingText->getLocalBounds().width / 2.0f, endingText->getLocalBounds().height / 2.0f);
+
+
     }
     else
     {
@@ -236,6 +245,7 @@ void Game::Process()
     {
         paused = true;
 		victory = true;
+		if (level >= 2) endGame = true;
     }
     // Check lose condition
     if (birdNormalLeft + birdDropLeft + birdBigLeft <= 0)
@@ -407,6 +417,11 @@ void Game::Process()
                         paused = false;
                         victory = false;
                         level++;
+                        if (level > 2) // Max 2 levels
+                        {
+							level = 1;
+							endGame = false;
+                        }
                         CreateLevel(level);
                     }
 				}
@@ -508,6 +523,11 @@ void Game::Process()
         {
             window->draw(nextButton);
 			window->draw(*nextButtonText);
+
+            if (endGame)
+            {
+				window->draw(*endingText);
+            }
         }
     }
 
@@ -812,10 +832,6 @@ void Game::CreateLevel(int _level)
 
             break;
 		}
-        case 3:
-        {
-			break;
-        }
         default:
 			break;
     }

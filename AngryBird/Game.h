@@ -33,6 +33,7 @@ private:
 	sf::Text* retryButtonText = nullptr;
 	sf::RectangleShape nextButton;
 	sf::Text* nextButtonText = nullptr;
+	sf::Text* endingText = nullptr;
 
 	sf::Sprite backgroundSprite;
 	sf::Sprite pauseSprite;
@@ -74,6 +75,7 @@ private:
 
 	bool paused = false;
 	bool victory = false;
+	bool endGame = false;
 
 	int birdMode = BIRD_NORMAL;
 	int score = 0;
