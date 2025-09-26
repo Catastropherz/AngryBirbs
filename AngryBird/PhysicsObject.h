@@ -15,6 +15,7 @@ private:
 
 	float health = 100.0f;
 	bool invul = false;
+	float gracePeriod = 1.0f; //seconds // Time after spawning where it can't take damage
 
 	bool markedForDestroy = false;
 	bool isEnemy = false;
@@ -53,6 +54,6 @@ public:
 	void RemoveCollisionMask(unsigned int _mask);
 
 	void StarRespawnTimer();
-	bool UpdateRespawnTimer(float _deltaTime);
+	bool Update(float _deltaTime);
 };
 

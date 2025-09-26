@@ -19,6 +19,8 @@ private:
 	sf::Sprite pipeSprite;
 	sf::Sprite duckSprite;
 	sf::Sprite slingshotSprite;
+	sf::Sprite boxSprite;
+	sf::Sprite fenceSprite;
 
 	b2World* Box2dWorld;
 	class MyContactList* Box2dContactListener = nullptr;
@@ -31,6 +33,11 @@ private:
 
 	b2DistanceJoint* slingshotJoint = nullptr;
 
+	int score = 0;
+	int birdsLeft = 5;
+	int enemiesLeft = 3;
+	int level = 1;
+
 public:
 	Game(int _width = 1280, int _height = 720);
 	~Game();
@@ -42,6 +49,9 @@ public:
 
 	PhysicsObject* CreatePipe(b2Vec2 _position, float _rotation);
 	PhysicsObject* CreateSlingshot(b2Vec2 _position, float _rotation);
+	PhysicsObject* CreateBox(b2Vec2 _position, float _rotation);
+	PhysicsObject* CreateEnemy(b2Vec2 _position, float _rotation);
+	void CreateLevel(int _level);
 
 	std::vector<PhysicsObject*> GetPhysicsObjects();
 };

@@ -30,10 +30,20 @@ Game::Game(int _width, int _height)
     groundSprite.setTexture(*groundTexture);
 	Textures.push_back(groundTexture); //Store texture so it doesn't go out of scope
 
+	sf::Texture* boxTexture = new sf::Texture;
+	boxTexture->loadFromFile("Sprites/box.png");
+	boxSprite.setTexture(*boxTexture);
+	Textures.push_back(boxTexture); //Store texture so it doesn't go out of scope
+
     sf::Texture* pipeTexture = new sf::Texture;
     pipeTexture->loadFromFile("Sprites/pipe.png");
     pipeSprite.setTexture(*pipeTexture);
 	Textures.push_back(pipeTexture); //Store texture so it doesn't go out of scope
+
+    sf::Texture* fenceTexture = new sf::Texture;
+    fenceTexture->loadFromFile("Sprites/fence.png");
+    fenceSprite.setTexture(*fenceTexture);
+    Textures.push_back(fenceTexture); //Store texture so it doesn't go out of scope
 
     sf::Texture* slingshotTexture = new sf::Texture;
     slingshotTexture->loadFromFile("Sprites/SlingshotFinal.png");
@@ -67,11 +77,26 @@ Game::Game(int _width, int _height)
 	Box2dContactListener = new MyContactList(Box2dWorld, this);
 	Box2dWorld->SetContactListener(Box2dContactListener);
 
+    //Create slingshot object
     CreateSlingshot(b2Vec2(4.0f, 12.0f), 0.0f);
     if (slingshotObject)
     {
 		slingshotObject->SetCollisionCategory(CATEGORY_SPRITE);
     }
+
+	//Create fence object (static)
+	PhysicsObject* fenceObject = new PhysicsObject(
+        b2Shape::e_polygon,         // Type (polygon = box, circle)
+        &fenceSprite,          // Sprite
+        b2Vec2(1.0f, 1.0f),      // Size (in meters)
+        b2Vec2(5.0f, 13.0f),       // Position (in meters)
+        0.0f,                       // Rotation (in degrees)
+        b2_staticBody,             // Body type (static, kinematic, dynamic)
+        Box2dWorld,                 // Pointer to the box2d world
+        this						// Pointer to the game class
+    );
+    fenceObject->SetHealth(100.0f, true); //Set invul
+	PhysicsObjects.push_back(fenceObject);
 
     //Create the chick object (box)
     PhysicsObject* chickObject = new PhysicsObject(
@@ -89,23 +114,6 @@ Game::Game(int _width, int _height)
 	chickObject->AddCollisionMask(CATEGORY_PHYSICSOBJECT | CATEGORY_DEFAULT);
     PhysicsObjects.push_back(chickObject);
 	projectileObject = chickObject; //Set as projectile
-
-    //Create the duck object (circle)
-    PhysicsObject* duckObject = new PhysicsObject(
-        b2Shape::e_circle,         // Type (polygon = box, circle)
-        &duckSprite,               // Sprite
-        b2Vec2(1.0f, 1.0f),         // Size (in meters)
-        b2Vec2(10.0f, 12.0f),         // Position (in meters)
-        0.0f,                      // Rotation (in degrees)
-        b2_dynamicBody,             // Body type (static, kinematic, dynamic)
-        Box2dWorld,                  // Pointer to the box2d world
-		this						// Pointer to the game class
-    );
-    duckObject->SetHealth(100.0f); //Set health
-	duckObject->setIsEnemy(true); //Set as enemy
-	duckObject->SetCollisionCategory(CATEGORY_PHYSICSOBJECT);
-	duckObject->AddCollisionMask(CATEGORY_PHYSICSOBJECT | CATEGORY_DEFAULT | CATEGORY_BIRD);
-    PhysicsObjects.push_back(duckObject);
 
     //Create the ground object (static)
     groundObject = new PhysicsObject(
@@ -136,21 +144,6 @@ Game::Game(int _width, int _height)
 	slingshotJoint = (b2DistanceJoint*)Box2dWorld->CreateJoint(&slingshotJointDef);
 
 
-
-	PhysicsObject* Pipe1 = CreatePipe(b2Vec2(15.0f, 9.0f), 0.0f);
-    PhysicsObject* Pipe2 = CreatePipe(b2Vec2(15.0f, 7.0f), 0.0f);
-
-	b2RevoluteJointDef RevoluteJointDef;
-	RevoluteJointDef.bodyA = Pipe1->GetBody();
-	RevoluteJointDef.bodyB = Pipe2->GetBody();
-	RevoluteJointDef.localAnchorA = b2Vec2(0.0f, -1.5f);
-	RevoluteJointDef.localAnchorB = b2Vec2(0.0f, 0.0f);
-    RevoluteJointDef.upperAngle = DegreesToRadians(110);
-	RevoluteJointDef.lowerAngle = DegreesToRadians(70);
-	RevoluteJointDef.enableLimit = true;
-
-	b2RevoluteJoint* RevoluteJoint = (b2RevoluteJoint*)Box2dWorld->CreateJoint(&RevoluteJointDef);
-
 }
 
 Game::~Game()
@@ -174,6 +167,18 @@ Game::~Game()
 
 void Game::PlayGame()
 {
+	CreateLevel(level);
+    //Draw our physics objects.
+    for (auto obj : PhysicsObjects)
+    {
+        obj->Draw(*window);
+    }
+    //Finally, display the window.
+    window->display();
+	
+    // Press any button to start the game
+	std::cin.get();
+
     //This is the window process section for SFML.
     while (window->isOpen())
     {
@@ -190,7 +195,7 @@ void Game::Process()
     for (int i = 0; i < PhysicsObjects.size(); i++)
     {
 		// Tick down respawn timers and reset projectile location
-        if (PhysicsObjects[i] == projectileObject && PhysicsObjects[i]->UpdateRespawnTimer(g_timeStep))
+        if (PhysicsObjects[i]->Update(g_timeStep) && PhysicsObjects[i] == projectileObject)
         {
             // Setup Slingshot Joint
             b2DistanceJointDef slingshotJointDef;
@@ -375,6 +380,116 @@ PhysicsObject* Game::CreateSlingshot(b2Vec2 _position, float _rotation)
     PhysicsObjects.push_back(slingshotObject);
     
     return slingshotObject;
+}
+
+PhysicsObject* Game::CreateBox(b2Vec2 _position, float _rotation)
+{
+    //Create a few box objects (static)
+    PhysicsObject* boxObject = new PhysicsObject(
+        b2Shape::e_polygon,         // Type (polygon = box, circle)
+        &boxSprite,                // Sprite
+        b2Vec2(1.0f, 1.0f),         // Size (in meters)
+        _position,                  // Position (in meters)
+        _rotation,                  // Rotation (in degrees)
+        b2_dynamicBody,             // Body type (static, kinematic, dynamic)
+        Box2dWorld,                  // Pointer to the box2d world
+        this						// Pointer to the game class
+    );
+    boxObject->SetHealth(10.0f, false); //Set health
+    boxObject->SetCollisionCategory(CATEGORY_PHYSICSOBJECT);
+    boxObject->AddCollisionMask(CATEGORY_BIRD | CATEGORY_PHYSICSOBJECT | CATEGORY_DEFAULT);
+    PhysicsObjects.push_back(boxObject);
+
+    return boxObject;
+}
+
+PhysicsObject* Game::CreateEnemy(b2Vec2 _position, float _rotation)
+{
+    // Enemies
+    //Create the duck object (circle)
+    PhysicsObject* duckObject = new PhysicsObject(
+        b2Shape::e_circle,          // Type (polygon = box, circle)
+        &duckSprite,                // Sprite
+        b2Vec2(1.0f, 1.0f),         // Size (in meters)
+        _position,                  // Position (in meters)
+        _rotation,                  // Rotation (in degrees)
+        b2_dynamicBody,             // Body type (static, kinematic, dynamic)
+        Box2dWorld,                 // Pointer to the box2d world
+        this						// Pointer to the game class
+    );
+    duckObject->SetHealth(60.0f); //Set health
+    duckObject->setIsEnemy(true); //Set as enemy
+    duckObject->SetCollisionCategory(CATEGORY_PHYSICSOBJECT);
+    duckObject->AddCollisionMask(CATEGORY_PHYSICSOBJECT | CATEGORY_DEFAULT | CATEGORY_BIRD);
+    PhysicsObjects.push_back(duckObject);
+
+	return duckObject;
+}
+
+void Game::CreateLevel(int _level)
+{
+    switch (_level)
+    {
+        case 1:
+        {
+            //Environments
+            PhysicsObject* Pipe1 = CreatePipe(b2Vec2(17.0f, 10.5f), 0.0f);
+			PhysicsObject* Pipe2 = CreatePipe(b2Vec2(15.0f, 10.5f), 0.0f);
+            PhysicsObject* Pipe3 = CreatePipe(b2Vec2(16.0f, 8.5f), 90.0f);
+
+            b2RevoluteJointDef RevoluteJointDef;
+            RevoluteJointDef.bodyA = Pipe1->GetBody();
+            RevoluteJointDef.bodyB = Pipe3->GetBody();
+            RevoluteJointDef.localAnchorA = b2Vec2(-1.0f, -1.5f);
+            RevoluteJointDef.localAnchorB = b2Vec2(0.0f, 0.0f);
+            RevoluteJointDef.upperAngle = DegreesToRadians(100);
+            RevoluteJointDef.lowerAngle = DegreesToRadians(80);
+            RevoluteJointDef.enableLimit = true;
+            b2RevoluteJoint* RevoluteJoint = (b2RevoluteJoint*)Box2dWorld->CreateJoint(&RevoluteJointDef);
+
+            RevoluteJointDef.bodyA = Pipe2->GetBody();
+            RevoluteJointDef.bodyB = Pipe3->GetBody();
+            RevoluteJointDef.localAnchorA = b2Vec2(1.0f, -1.5f);
+            RevoluteJointDef.localAnchorB = b2Vec2(0.0f, 0.0f);
+            RevoluteJointDef.upperAngle = DegreesToRadians(100);
+            RevoluteJointDef.lowerAngle = DegreesToRadians(80);
+            RevoluteJointDef.enableLimit = true;
+            b2RevoluteJoint* RevoluteJoint2 = (b2RevoluteJoint*)Box2dWorld->CreateJoint(&RevoluteJointDef);
+
+			PhysicsObject* Box1 = CreateBox(b2Vec2(14.0f, 13.0f), 0.0f);
+            PhysicsObject* Box2 = CreateBox(b2Vec2(14.0f, 12.0f), 0.0f);
+            PhysicsObject* Box3 = CreateBox(b2Vec2(13.0f, 13.0f), 0.0f);
+            PhysicsObject* Box4 = CreateBox(b2Vec2(12.0f, 13.0f), 0.0f);
+            PhysicsObject* Box5 = CreateBox(b2Vec2(11.0f, 13.0f), 0.0f);
+            PhysicsObject* Box6 = CreateBox(b2Vec2(15.0f, 8.0f), 0.0f);
+            PhysicsObject* Box7 = CreateBox(b2Vec2(17.0f, 8.0f), 0.0f);
+            PhysicsObject* Box8 = CreateBox(b2Vec2(15.0f, 7.0f), 0.0f);
+            PhysicsObject* Box9 = CreateBox(b2Vec2(17.0f, 7.0f), 0.0f);
+            PhysicsObject* Box10 = CreateBox(b2Vec2(15.0f, 13.0f), 0.0f);
+            PhysicsObject* Box11 = CreateBox(b2Vec2(17.0f, 13.0f), 0.0f);
+            PhysicsObject* Box12 = CreateBox(b2Vec2(19.0f, 13.0f), 0.0f);
+            PhysicsObject* Box13 = CreateBox(b2Vec2(19.0f, 12.0f), 0.0f);
+
+			//Enemies
+			PhysicsObject* Duck1 = CreateEnemy(b2Vec2(13.0f, 12.0f), 0.0f);
+            PhysicsObject* Duck2 = CreateEnemy(b2Vec2(14.0f, 11.0f), 0.0f);
+            PhysicsObject* Duck3 = CreateEnemy(b2Vec2(16.0f, 8.0f), 0.0f);
+            PhysicsObject* Duck4 = CreateEnemy(b2Vec2(16.0f, 13.0f), 0.0f);
+            PhysicsObject* Duck5 = CreateEnemy(b2Vec2(18.0f, 13.0f), 0.0f);
+
+		    break;
+        }
+        case 2:
+        {
+            break;
+		}
+        case 3:
+        {
+			break;
+        }
+        default:
+			break;
+    }
 }
 
 std::vector<PhysicsObject*> Game::GetPhysicsObjects()

@@ -81,8 +81,7 @@ void PhysicsObject::ReceiveImpact(float _approachSpeed)
 {
 	if (invul) return;
 	if (_approachSpeed < 1.0f) return;
-	
-	// TODO : Give everything 1s invulnerability after spawning
+	if (gracePeriod > 0.0f) return;
 
 	health -= pow(_approachSpeed, 2);
 	std::cout << "Health: " << health << std::endl;
@@ -166,8 +165,9 @@ void PhysicsObject::StarRespawnTimer()
 	respawnCountdown = respawnTimer;
 }
 
-bool PhysicsObject::UpdateRespawnTimer(float _deltaTime)
+bool PhysicsObject::Update(float _deltaTime)
 {
+	gracePeriod -= _deltaTime;
 	if (!isRespawn) return false;
 	respawnCountdown -= _deltaTime;
 
