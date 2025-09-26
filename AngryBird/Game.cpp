@@ -467,7 +467,7 @@ PhysicsObject* Game::CreateEnemy(b2Vec2 _position, float _rotation)
     // Enemies
     //Create the duck object (circle)
     PhysicsObject* duckObject = new PhysicsObject(
-        b2Shape::e_circle,          // Type (polygon = box, circle)
+        b2Shape::e_polygon,          // Type (polygon = box, circle)
         &duckSprite,                // Sprite
         b2Vec2(1.0f, 1.0f),         // Size (in meters)
         _position,                  // Position (in meters)
@@ -476,7 +476,7 @@ PhysicsObject* Game::CreateEnemy(b2Vec2 _position, float _rotation)
         Box2dWorld,                 // Pointer to the box2d world
         this						// Pointer to the game class
     );
-    duckObject->SetHealth(50.0f); //Set health
+    duckObject->SetHealth(35.0f); //Set health
     duckObject->setIsEnemy(true); //Set as enemy
     duckObject->SetCollisionCategory(CATEGORY_PHYSICSOBJECT);
     duckObject->AddCollisionMask(CATEGORY_PHYSICSOBJECT | CATEGORY_DEFAULT | CATEGORY_BIRD);
@@ -639,6 +639,72 @@ void Game::CreateLevel(int _level)
         }
         case 2:
         {
+			PhysicsObject* Box1 = CreateBox(b2Vec2(19.0f, 13.0f), 0.0f);
+			PhysicsObject* Box2 = CreateBox(b2Vec2(19.0f, 12.0f), 0.0f);
+			PhysicsObject* Box3 = CreateBox(b2Vec2(19.0f, 11.0f), 0.0f);
+			PhysicsObject* Box4 = CreateBox(b2Vec2(16.0f, 13.0f), 0.0f);
+			PhysicsObject* Box5 = CreateBox(b2Vec2(16.0f, 12.0f), 0.0f);
+			PhysicsObject* Box6 = CreateBox(b2Vec2(16.0f, 11.0f), 0.0f);
+			PhysicsObject* Box7 = CreateBox(b2Vec2(17.0f, 9.0f), 0.0f);
+			PhysicsObject* Box8 = CreateBox(b2Vec2(18.0f, 9.0f), 0.0f);
+            PhysicsObject* Box9 = CreateBox(b2Vec2(17.5f, 5.0f), 0.0f);
+            PhysicsObject* Box10 = CreateBox(b2Vec2(12.0f, 13.0f), 0.0f);
+            PhysicsObject* Box11 = CreateBox(b2Vec2(12.0f, 12.0f), 0.0f);
+			PhysicsObject* Box12 = CreateBox(b2Vec2(12.0f, 11.0f), 0.0f);
+            PhysicsObject* Box13 = CreateBox(b2Vec2(12.0f, 10.0f), 0.0f);
+            PhysicsObject* Box14 = CreateBox(b2Vec2(12.0f, 9.0f), 0.0f);
+            PhysicsObject* Box15 = CreateBox(b2Vec2(12.0f, 8.0f), 0.0f);
+            PhysicsObject* Box16 = CreateBox(b2Vec2(12.0f, 7.0f), 0.0f);
+            PhysicsObject* Box17 = CreateBox(b2Vec2(8.0f, 11.0f), 0.0f);
+            PhysicsObject* Box18 = CreateBox(b2Vec2(9.0f, 11.0f), 0.0f);
+
+			PhysicsObject* Pipe1 = CreatePipe(b2Vec2(17.5f, 10.0f), 90.0f);
+			PhysicsObject* Pipe2 = CreatePipe(b2Vec2(17.0f, 7.0f), 0.0f);
+            PhysicsObject* Pipe3 = CreatePipe(b2Vec2(18.0f, 7.0f), 0.0f);
+			PhysicsObject* Pipe4 = CreatePipe(b2Vec2(7.0f, 12.0f), 180.0f);
+            PhysicsObject* Pipe5 = CreatePipe(b2Vec2(10.0f, 12.0f), 180.0f);
+			PhysicsObject* Pipe6 = CreatePipe(b2Vec2(8.5f, 12.0f), 90.0f);
+            PhysicsObject* Pipe7 = CreatePipe(b2Vec2(9.2f, 9.0f), 150.0f);
+            PhysicsObject* Pipe8 = CreatePipe(b2Vec2(24.0f, 12.0f), 0.0f);
+            
+
+			//Joints
+            b2RevoluteJointDef RevoluteJointDef;
+            RevoluteJointDef.bodyA = Pipe6->GetBody();
+            RevoluteJointDef.bodyB = Pipe4->GetBody();
+            RevoluteJointDef.localAnchorA = b2Vec2(0.0f, 1.5f);
+            RevoluteJointDef.localAnchorB = b2Vec2(0.0f, 0.0f);
+            RevoluteJointDef.upperAngle = DegreesToRadians(90);
+            RevoluteJointDef.lowerAngle = DegreesToRadians(90);
+            RevoluteJointDef.enableLimit = true;
+            b2RevoluteJoint* RevoluteJoint = (b2RevoluteJoint*)Box2dWorld->CreateJoint(&RevoluteJointDef);
+
+            RevoluteJointDef.bodyA = Pipe6->GetBody();
+            RevoluteJointDef.bodyB = Pipe5->GetBody();
+            RevoluteJointDef.localAnchorA = b2Vec2(0.0f, -1.5f);
+            RevoluteJointDef.localAnchorB = b2Vec2(0.0f, 0.0f);
+            RevoluteJointDef.upperAngle = DegreesToRadians(90);
+            RevoluteJointDef.lowerAngle = DegreesToRadians(90);
+            RevoluteJointDef.enableLimit = true;
+            b2RevoluteJoint* RevoluteJoint2 = (b2RevoluteJoint*)Box2dWorld->CreateJoint(&RevoluteJointDef);
+
+            RevoluteJointDef.bodyA = Pipe5->GetBody();
+            RevoluteJointDef.bodyB = Pipe7->GetBody();
+            RevoluteJointDef.localAnchorA = b2Vec2(0.0f, 1.5f);
+            RevoluteJointDef.localAnchorB = b2Vec2(0.0f, -1.7f);
+            RevoluteJointDef.upperAngle = DegreesToRadians(70);
+            RevoluteJointDef.lowerAngle = DegreesToRadians(-40);
+            RevoluteJointDef.enableLimit = true;
+            b2RevoluteJoint* RevoluteJoint3 = (b2RevoluteJoint*)Box2dWorld->CreateJoint(&RevoluteJointDef);
+
+
+			//Enemies
+			PhysicsObject* Duck1 = CreateEnemy(b2Vec2(17.5f, 4.0f), 0.0f);
+            PhysicsObject* Duck2 = CreateEnemy(b2Vec2(17.5f, 13.0f), 0.0f);
+			PhysicsObject* Duck3 = CreateEnemy(b2Vec2(12.0f, 6.0f), 0.0f);
+            PhysicsObject* Duck4 = CreateEnemy(b2Vec2(8.5f, 10.0f), 0.0f);
+            PhysicsObject* Duck5 = CreateEnemy(b2Vec2(24.0f, 10.0f), 0.0f);
+
             break;
 		}
         case 3:

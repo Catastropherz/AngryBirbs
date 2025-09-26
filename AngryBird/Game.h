@@ -6,6 +6,7 @@
 #include "PhysicsObject.h"
 #include <iostream>
 #include "PhysicsLibrary.h"
+#include "box2d\b2_joint.h"
 
 enum BirdType
 {
@@ -56,14 +57,14 @@ private:
 
 	int birdMode = BIRD_NORMAL;
 	int score = 0;
-	int birdNormalAmmo = 15;
+	int birdNormalAmmo = 4;
 	int birdNormalLeft = birdNormalAmmo;
 	int birdDropAmmo = 2;
 	int birdDropLeft = birdDropAmmo;
 	int birdBigAmmo = 1;
 	int birdBigLeft = birdBigAmmo;
 	int enemiesLeft = 5;
-	int level = 1;
+	int level = 2;
 
 public:
 	Game(int _width = 1280, int _height = 720);
