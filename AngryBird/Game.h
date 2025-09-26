@@ -64,7 +64,7 @@ private:
 	int birdBigAmmo = 1;
 	int birdBigLeft = birdBigAmmo;
 	int enemiesLeft = 5;
-	int level = 2;
+	int level = 1;
 
 public:
 	Game(int _width = 1280, int _height = 720);

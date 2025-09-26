@@ -12,6 +12,7 @@ private:
 
 	//The size of the object in meters
 	b2Vec2 Size;
+	b2Vec2 OriginalSize;
 
 	float health = 100.0f;
 	bool invul = false;
@@ -24,6 +25,8 @@ private:
 	bool isRespawn = false;
 	float respawnTimer = 4.5f; //seconds
 	float respawnCountdown = 0.0f;
+
+	bool isEffectActivated = false;
 
 	class Game* gameClass = nullptr;
 
@@ -40,12 +43,14 @@ public:
 	void ReceiveImpact(float _approachSpeed);
 
 	void SetSprite(sf::Sprite* _sprite);
+	void UpdateFixtureSizeAndMass(b2Vec2 _size);
 
 	void SetHealth(float _health, bool _invul = false);
 	void setIsEnemy(bool _isEnemy);
 
 	inline bool IsMarkedForDestroy() { return markedForDestroy; }
 	inline bool GetIsEnemy() { return isEnemy; }
+	inline bool GetIsRespawn() { return isRespawn; }
 
 	PhysicsObject* SetFilterGroup(int16 _filterGroup);
 
@@ -58,5 +63,7 @@ public:
 
 	void StarRespawnTimer();
 	bool Update(float _deltaTime);
+
+	void ActivateBirdEffect(int _birdType);
 };
 

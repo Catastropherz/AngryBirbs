@@ -90,6 +90,16 @@ Game::Game(int _width, int _height)
         birdBigText->setOutlineColor(sf::Color::Black);
         birdBigText->setOutlineThickness(2.0f);
         birdBigText->setPosition(100.0f, 130.0f);
+
+        descriptionText = new sf::Text("Normal Bird: Just an ordinary bird.", font, 18);
+		descriptionText->setFillColor(sf::Color::Yellow);
+		descriptionText->setOutlineColor(sf::Color::Black);
+		descriptionText->setOutlineThickness(2.0f);
+        descriptionText->setPosition(200.0f, 80.0f);
+    }
+    else
+    {
+		std::cout << "Failed to load font!" << std::endl;
     }
 
     // Setup UI
@@ -286,33 +296,32 @@ void Game::Process()
             //Check if a mouse location is inside a body after converting location to meters
             sf::Vector2i MousePos = sf::Mouse::getPosition(*window);
             b2Vec2 MousePoint(MousePos.x / g_sizeScale, MousePos.y / g_sizeScale);
-
-            // Iterate through all bodies
-            //for (b2Body* bodyIter = Box2dWorld->GetBodyList(); bodyIter != nullptr; bodyIter = bodyIter->GetNext())
-            //{
             if(projectileObject)
             {
-                //if (bodyIter->GetType() != b2_dynamicBody) continue; // Don't try to grab non-dynamic body
-                // b2Transform transform = bodyIter->GetTransform();
-				b2Transform transform = projectileObject->GetBody()->GetTransform();
-                //if (bodyIter->GetFixtureList()->GetShape()->TestPoint(transform, MousePoint))
-                if (projectileObject->GetBody()->GetFixtureList()->GetShape()->TestPoint(transform, MousePoint))
+				// If the projectile is not fired yet, allow clicking on it
+                if (projectileObject->GetIsRespawn() == false)
                 {
-                    //Found a body, set up a mouse joint with the body
-                    b2MouseJointDef mouseJointDef;
-                    mouseJointDef.bodyA = groundObject->GetBody(); // Static body
-                    //mouseJointDef.bodyB = bodyIter; // The dynamic body we clicked on
-					mouseJointDef.bodyB = projectileObject->GetBody(); // The projectile body
-                    mouseJointDef.target = MousePoint;
-                    mouseJointDef.collideConnected = true;
-                   // mouseJointDef.maxForce = 1000.0f * bodyIter->GetMass();
-					mouseJointDef.maxForce = 1000.0f * projectileObject->GetBody()->GetMass();
-                    mouseJointDef.damping = 10.0f;
-                    mouseJointDef.stiffness = 500.0f;
+                    b2Transform transform = projectileObject->GetBody()->GetTransform();
+                    if (projectileObject->GetBody()->GetFixtureList()->GetShape()->TestPoint(transform, MousePoint))
+                    {
+                        //Found a body, set up a mouse joint with the body
+                        b2MouseJointDef mouseJointDef;
+                        mouseJointDef.bodyA = groundObject->GetBody(); // Static body
+                        mouseJointDef.bodyB = projectileObject->GetBody(); // The projectile body
+                        mouseJointDef.target = MousePoint;
+                        mouseJointDef.collideConnected = true;
+                        mouseJointDef.maxForce = 1000.0f * projectileObject->GetBody()->GetMass();
+                        mouseJointDef.damping = 10.0f;
+                        mouseJointDef.stiffness = 500.0f;
 
-                    MouseJoint = (b2MouseJoint*)Box2dWorld->CreateJoint(&mouseJointDef);
-                    MouseJoint->SetTarget(MousePoint);
-                    break;
+                        MouseJoint = (b2MouseJoint*)Box2dWorld->CreateJoint(&mouseJointDef);
+                        MouseJoint->SetTarget(MousePoint);
+                        break;
+                    }
+                }
+                else // If the porojectile is already fired, clicking will activate its effect
+                {
+					projectileObject->ActivateBirdEffect(birdMode);
                 }
             }
         }
@@ -391,7 +400,7 @@ void Game::Process()
 	window->draw(*birdNormalText);
 	window->draw(*birdDropText);
 	window->draw(*birdBigText);
-	//window->draw(*descriptionText);
+	window->draw(*descriptionText);
 	window->draw(chickSpriteUI);
 	window->draw(parrotSpriteUI);
 	window->draw(owlSpriteUI);
@@ -591,38 +600,28 @@ void Game::CreateLevel(int _level)
         case 1:
         {
             //Environments
-            PhysicsObject* Pipe1 = CreatePipe(b2Vec2(17.0f, 10.5f), 0.0f);
-			PhysicsObject* Pipe2 = CreatePipe(b2Vec2(15.0f, 10.5f), 0.0f);
-            PhysicsObject* Pipe3 = CreatePipe(b2Vec2(16.0f, 8.5f), 90.0f);
+            PhysicsObject* Pipe1 = CreatePipe(b2Vec2(17.0f, 11.0f), 0.0f);
+            PhysicsObject* Pipe3 = CreatePipe(b2Vec2(17.0f, 9.0f), 90.0f);
 
             b2RevoluteJointDef RevoluteJointDef;
             RevoluteJointDef.bodyA = Pipe1->GetBody();
             RevoluteJointDef.bodyB = Pipe3->GetBody();
-            RevoluteJointDef.localAnchorA = b2Vec2(-1.0f, -1.5f);
+            RevoluteJointDef.localAnchorA = b2Vec2(0.0f, -1.8f);
             RevoluteJointDef.localAnchorB = b2Vec2(0.0f, 0.0f);
             RevoluteJointDef.upperAngle = DegreesToRadians(100);
-            RevoluteJointDef.lowerAngle = DegreesToRadians(80);
+            RevoluteJointDef.lowerAngle = DegreesToRadians(70);
             RevoluteJointDef.enableLimit = true;
             b2RevoluteJoint* RevoluteJoint = (b2RevoluteJoint*)Box2dWorld->CreateJoint(&RevoluteJointDef);
-
-            RevoluteJointDef.bodyA = Pipe2->GetBody();
-            RevoluteJointDef.bodyB = Pipe3->GetBody();
-            RevoluteJointDef.localAnchorA = b2Vec2(1.0f, -1.5f);
-            RevoluteJointDef.localAnchorB = b2Vec2(0.0f, 0.0f);
-            RevoluteJointDef.upperAngle = DegreesToRadians(100);
-            RevoluteJointDef.lowerAngle = DegreesToRadians(80);
-            RevoluteJointDef.enableLimit = true;
-            b2RevoluteJoint* RevoluteJoint2 = (b2RevoluteJoint*)Box2dWorld->CreateJoint(&RevoluteJointDef);
 
 			PhysicsObject* Box1 = CreateBox(b2Vec2(14.0f, 13.0f), 0.0f);
             PhysicsObject* Box2 = CreateBox(b2Vec2(14.0f, 12.0f), 0.0f);
             PhysicsObject* Box3 = CreateBox(b2Vec2(13.0f, 13.0f), 0.0f);
             PhysicsObject* Box4 = CreateBox(b2Vec2(12.0f, 13.0f), 0.0f);
             PhysicsObject* Box5 = CreateBox(b2Vec2(11.0f, 13.0f), 0.0f);
-            PhysicsObject* Box6 = CreateBox(b2Vec2(15.0f, 8.0f), 0.0f);
-            PhysicsObject* Box7 = CreateBox(b2Vec2(17.0f, 8.0f), 0.0f);
-            PhysicsObject* Box8 = CreateBox(b2Vec2(15.0f, 7.0f), 0.0f);
-            PhysicsObject* Box9 = CreateBox(b2Vec2(17.0f, 7.0f), 0.0f);
+            PhysicsObject* Box6 = CreateBox(b2Vec2(15.95f, 8.5f), 0.0f);
+            PhysicsObject* Box7 = CreateBox(b2Vec2(18.05f, 8.5f), 0.0f);
+            PhysicsObject* Box8 = CreateBox(b2Vec2(17.05f, 8.5f), 0.0f);
+            //PhysicsObject* Box9 = CreateBox(b2Vec2(16.95f, 7.5f), 0.0f);
             PhysicsObject* Box10 = CreateBox(b2Vec2(15.0f, 13.0f), 0.0f);
             PhysicsObject* Box11 = CreateBox(b2Vec2(17.0f, 13.0f), 0.0f);
             PhysicsObject* Box12 = CreateBox(b2Vec2(19.0f, 13.0f), 0.0f);
@@ -631,7 +630,7 @@ void Game::CreateLevel(int _level)
 			//Enemies
 			PhysicsObject* Duck1 = CreateEnemy(b2Vec2(13.0f, 12.0f), 0.0f);
             PhysicsObject* Duck2 = CreateEnemy(b2Vec2(14.0f, 11.0f), 0.0f);
-            PhysicsObject* Duck3 = CreateEnemy(b2Vec2(16.0f, 8.0f), 0.0f);
+            PhysicsObject* Duck3 = CreateEnemy(b2Vec2(16.95f, 7.5f), 0.0f);
             PhysicsObject* Duck4 = CreateEnemy(b2Vec2(16.0f, 13.0f), 0.0f);
             PhysicsObject* Duck5 = CreateEnemy(b2Vec2(18.0f, 13.0f), 0.0f);
 
@@ -751,12 +750,18 @@ void Game::SwitchBird()
     {
     case BIRD_NORMAL:
         projectileObject->SetSprite(&chickSprite);
+		descriptionText->setString("Normal Bird: Just an ordinary bird.");
+		descriptionText->setFillColor(sf::Color::Yellow);
         break;
     case BIRD_DROP:
         projectileObject->SetSprite(&parrotSprite);
+        descriptionText->setString("Drop Bird: Left click while in the air to drop to the ground.");
+		descriptionText->setFillColor(sf::Color::Red);
         break;
     case BIRD_BIG:
         projectileObject->SetSprite(&owlSprite);
+		descriptionText->setString("Growth Bird: Left click while in the air to increase size.");
+		descriptionText->setFillColor(sf::Color::Cyan);
         break;
     default:
         projectileObject->SetSprite(&chickSprite);

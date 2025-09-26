@@ -7,6 +7,7 @@ PhysicsObject::PhysicsObject(b2Shape::Type _shapeType, sf::Sprite* _sprite, b2Ve
 	float _rotationDegrees, b2BodyType _bodyType, b2World* _world, Game* _gameClass)
 {
 	Size = _size;
+	OriginalSize = _size;
 	Sprite = _sprite;
 	Box2dWorld = _world;
 	gameClass = _gameClass;
@@ -100,6 +101,41 @@ void PhysicsObject::SetSprite(sf::Sprite* _sprite)
 	Sprite = _sprite;
 }
 
+void PhysicsObject::UpdateFixtureSizeAndMass(b2Vec2 _size)
+{
+	// Copy the existing filter collision category/mask
+	b2Filter oldFilter = {};
+	if (Body->GetFixtureList())
+	{
+		oldFilter = Body->GetFixtureList()->GetFilterData();
+	}
+	
+	// Destroy all existing fixtures
+	b2Fixture* fixture = Body->GetFixtureList();
+	if (fixture)
+	{
+		Body->DestroyFixture(fixture);
+	}
+
+	// Update Size
+	Size = _size;
+
+	b2FixtureDef fixtureDef;
+	b2PolygonShape polyShape;
+
+	polyShape.SetAsBox(Size.x * 0.5f, Size.y * 0.5f);
+	fixtureDef.shape = &polyShape;
+
+	fixtureDef.density = (_size.x / OriginalSize.x);
+	fixtureDef.friction = 0.5f;
+	fixtureDef.restitution = 0.3f;
+	fixtureDef.filter = oldFilter;
+
+	Body->CreateFixture(&fixtureDef);
+	Body->ResetMassData();
+
+}
+
 void PhysicsObject::SetHealth(float _health, bool _invul)
 {
 	health = _health;
@@ -113,16 +149,6 @@ void PhysicsObject::setIsEnemy(bool _isEnemy)
 
 PhysicsObject* PhysicsObject::SetFilterGroup(int16 _filterGroup)
 {
-
-	//b2Filter FilterData;
-	//FilterData.categoryBits = CATEGORY_PLAYER;
-	//FilterData.maskBits = CATEGORY_ENEMY | CATEGORY_WALL;
-
-	//if (FilterData.maskBits && CATEGORY_ENEMY)
-	//{
-
-	//}
-
 	b2Filter FilterData;
 	FilterData.groupIndex = _filterGroup;
 
@@ -185,8 +211,36 @@ bool PhysicsObject::Update(float _deltaTime)
 		Body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
 		Body->SetAngularVelocity(0.0f);
 		isRespawn = false;
+		isEffectActivated = false;
+		UpdateFixtureSizeAndMass(OriginalSize);
 		return true;
 	}
 
 	return false;
+}
+
+void PhysicsObject::ActivateBirdEffect(int _birdType)
+{
+	switch (_birdType)
+	{
+		case BIRD_NORMAL:
+			// No effect
+			break;
+		case BIRD_DROP:
+			if (!isEffectActivated)
+			{
+				isEffectActivated = true;
+				Body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
+				Body->ApplyLinearImpulse(b2Vec2(0.0f, 10.0f), Body->GetWorldCenter(), true);
+			}
+			break;
+		case BIRD_BIG:
+			if (!isEffectActivated)
+			{
+				isEffectActivated = true;
+				b2Vec2 newSize(OriginalSize.x * 2.5f, OriginalSize.y * 2.5f);
+				UpdateFixtureSizeAndMass(newSize);
+			}
+			break;
+	}
 }
